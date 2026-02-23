@@ -198,10 +198,22 @@ button {
 
 @media (min-width: 768px) {
     .dashboard-grid {
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
         gap: 1.5rem;
         margin-bottom: 2rem;
     }
+}
+
+.hero-card {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(139, 92, 246, 0.05));
+    border: 1px solid var(--primary-color);
+}
+
+.hero-card .summary-header span {
+    font-size: 1rem;
+    color: var(--primary-color);
+    font-weight: 600;
 }
 
 .summary-card {
@@ -334,6 +346,7 @@ button {
     font-size: 1rem;
     transition: all var(--transition-fast);
     -webkit-appearance: none;
+    appearance: none;
     /* Required for iOS style fixes */
 }
 

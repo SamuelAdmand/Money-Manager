@@ -37,32 +37,51 @@
         </header>
 
         <div class="dashboard-grid" id="home-view">
-            <div class="glass summary-card">
+            <div class="glass summary-card hero-card">
                 <div class="summary-header">
-                    <span>Total Balance</span>
-                    <div class="summary-icon icon-balance">
-                        <ion-icon name="cash-outline"></ion-icon>
+                    <span>Spendable Balance</span>
+                    <div class="summary-icon icon-balance" style="background: rgba(99, 102, 241, 0.2);">
+                        <ion-icon name="wallet-outline"></ion-icon>
                     </div>
                 </div>
-                <div class="summary-amount" id="total-balance">₹0.00</div>
+                <div class="summary-amount text-primary" id="spendable-balance"
+                    style="font-size: 2.5rem; color: var(--primary-color);">₹0.00</div>
             </div>
             <div class="glass summary-card">
                 <div class="summary-header">
-                    <span>Income</span>
+                    <span>Net Worth</span>
                     <div class="summary-icon icon-income">
-                        <ion-icon name="arrow-down-circle-outline"></ion-icon>
+                        <ion-icon name="trending-up-outline"></ion-icon>
                     </div>
                 </div>
-                <div class="summary-amount tx-income" id="total-income">₹0.00</div>
+                <div class="summary-amount" id="net-worth">₹0.00</div>
             </div>
             <div class="glass summary-card">
                 <div class="summary-header">
-                    <span>Expenses</span>
-                    <div class="summary-icon icon-expense">
-                        <ion-icon name="arrow-up-circle-outline"></ion-icon>
+                    <span>Investments</span>
+                    <div class="summary-icon icon-balance">
+                        <ion-icon name="bar-chart-outline"></ion-icon>
                     </div>
                 </div>
-                <div class="summary-amount tx-expense" id="total-expense">₹0.00</div>
+                <div class="summary-amount" id="total-investments">₹0.00</div>
+            </div>
+            <div class="glass summary-card">
+                <div class="summary-header">
+                    <span>Credit Card Debt</span>
+                    <div class="summary-icon icon-expense">
+                        <ion-icon name="card-outline"></ion-icon>
+                    </div>
+                </div>
+                <div class="summary-amount tx-expense" id="total-debt">₹0.00</div>
+            </div>
+            <div class="glass summary-card">
+                <div class="summary-header">
+                    <span>Monthly EMIs</span>
+                    <div class="summary-icon icon-expense">
+                        <ion-icon name="calendar-outline"></ion-icon>
+                    </div>
+                </div>
+                <div class="summary-amount tx-expense" id="total-emis">₹0.00</div>
             </div>
         </div>
 
@@ -103,7 +122,8 @@
                     </form>
                 </div>
 
-                <div class="glass accounts-container" style="padding: 1.5rem;" id="accounts-desktop-container">
+                <div class="glass accounts-container" style="padding: 1.5rem; margin-bottom: 1.5rem;"
+                    id="accounts-desktop-container">
                     <div class="section-header">
                         <h2>My Accounts</h2>
                         <button class="btn-icon" id="add-account-btn-desktop" aria-label="Add Account"
@@ -140,6 +160,45 @@
                             <button type="submit" class="btn-primary"
                                 style="flex: 1; justify-content: center; padding: 0.5rem;">Save</button>
                             <button type="button" class="btn-icon" id="cancel-account-btn-desktop"
+                                style="border-radius: var(--radius-md);"><ion-icon name="close"></ion-icon></button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="glass emis-container" style="padding: 1.5rem;" id="emis-desktop-container">
+                    <div class="section-header">
+                        <h2>Monthly EMIs</h2>
+                        <button class="btn-icon" id="add-emi-btn-desktop" aria-label="Add EMI"
+                            style="width: 2rem; height: 2rem;">
+                            <ion-icon name="add"></ion-icon>
+                        </button>
+                    </div>
+                    <div class="account-list" id="emi-list-desktop">
+                        <!-- Populated by JS -->
+                    </div>
+
+                    <form id="add-emi-form-desktop"
+                        style="display: none; margin-top: 1rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                        <div class="form-group">
+                            <label for="emi-desc-desktop">Description</label>
+                            <input type="text" class="form-control" id="emi-desc-desktop"
+                                placeholder="Car Loan, Rent, etc." required>
+                        </div>
+                        <div class="form-group">
+                            <label for="emi-amount-desktop">Monthly Amount</label>
+                            <input type="number" class="form-control" id="emi-amount-desktop" placeholder="0.00"
+                                step="0.01" required min="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label for="emi-account-desktop">Linked Account</label>
+                            <select class="form-control" id="emi-account-desktop" required>
+                                <!-- Populated by JS -->
+                            </select>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button type="submit" class="btn-primary"
+                                style="flex: 1; justify-content: center; padding: 0.5rem;">Save EMI</button>
+                            <button type="button" class="btn-icon" id="cancel-emi-btn-desktop"
                                 style="border-radius: var(--radius-md);"><ion-icon name="close"></ion-icon></button>
                         </div>
                     </form>
@@ -200,6 +259,48 @@
                     </form>
                 </div>
             </div>
+
+            <div class="main-content mobile-only" id="emis-mobile-view" style="display: none;">
+                <div class="glass" style="padding: 1.5rem; min-height: 400px; padding-bottom: 6rem;">
+                    <div class="section-header">
+                        <h2>Monthly EMIs</h2>
+                        <button class="btn-icon" id="add-emi-btn-mobile" aria-label="Add EMI"
+                            style="width: 2rem; height: 2rem;">
+                            <ion-icon name="add"></ion-icon>
+                        </button>
+                    </div>
+                    <div class="account-list" id="emi-list-mobile">
+                        <!-- Populated by JS -->
+                    </div>
+
+                    <form id="add-emi-form-mobile"
+                        style="display: none; margin-top: 1rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                        <div class="form-group">
+                            <label for="emi-desc-mobile">Description</label>
+                            <input type="text" class="form-control" id="emi-desc-mobile"
+                                placeholder="Car Loan, Rent, etc." required>
+                        </div>
+                        <div class="form-group">
+                            <label for="emi-amount-mobile">Monthly Amount</label>
+                            <input type="number" class="form-control" id="emi-amount-mobile" placeholder="0.00"
+                                step="0.01" required min="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label for="emi-account-mobile">Linked Account</label>
+                            <select class="form-control" id="emi-account-mobile" required>
+                                <!-- Populated by JS -->
+                            </select>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button type="submit" class="btn-primary"
+                                style="flex: 1; justify-content: center; padding: 0.5rem;">Save EMI</button>
+                            <button type="button" class="btn-icon" id="cancel-emi-btn-mobile"
+                                style="border-radius: var(--radius-md);"><ion-icon name="close"></ion-icon></button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -210,15 +311,20 @@
             <span>Home</span>
         </a>
 
+        <a href="#" class="nav-item" id="nav-accounts">
+            <ion-icon name="card-outline"></ion-icon>
+            <span>Accounts</span>
+        </a>
+
         <div class="nav-fab-container">
             <button class="nav-fab" id="mobile-add-btn">
                 <ion-icon name="add"></ion-icon>
             </button>
         </div>
 
-        <a href="#" class="nav-item" id="nav-accounts">
-            <ion-icon name="card-outline"></ion-icon>
-            <span>Accounts</span>
+        <a href="#" class="nav-item" id="nav-emis">
+            <ion-icon name="calendar-outline"></ion-icon>
+            <span>EMIs</span>
         </a>
     </nav>
 

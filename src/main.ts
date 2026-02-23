@@ -17,9 +17,17 @@ interface Transaction {
     date: string;
 }
 
+interface EMI {
+    id: string;
+    description: string;
+    amount: number;
+    accountId: string;
+}
+
 interface AppState {
     accounts: Account[];
     transactions: Transaction[];
+    emis: EMI[];
     theme: 'light' | 'dark';
 }
 
@@ -29,6 +37,7 @@ const STORAGE_KEY = 'money_manager_state';
 let state: AppState = {
     accounts: [],
     transactions: [],
+    emis: [],
     theme: 'dark'
 };
 
@@ -37,11 +46,11 @@ function loadState() {
     if (saved) {
         try {
             state = JSON.parse(saved);
+            if (!state.emis) state.emis = [];
         } catch (e) {
             console.error('Failed to parse state:', e);
         }
     } else {
-        // Check system preference for theme initially
         if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
             state.theme = 'light';
         }
@@ -59,13 +68,15 @@ const themeToggle = document.getElementById('theme-toggle') as HTMLButtonElement
 const exportBtn = document.getElementById('export-data') as HTMLButtonElement;
 const importInput = document.getElementById('import-data') as HTMLInputElement;
 
-const totalBalanceEl = document.getElementById('total-balance')!;
-const totalIncomeEl = document.getElementById('total-income')!;
-const totalExpenseEl = document.getElementById('total-expense')!;
-
+// Dashboard
+const spendableBalanceEl = document.getElementById('spendable-balance')!;
+const netWorthEl = document.getElementById('net-worth')!;
+const totalInvestmentsEl = document.getElementById('total-investments')!;
+const totalDebtEl = document.getElementById('total-debt')!;
+const totalEmisEl = document.getElementById('total-emis')!;
 const txListEl = document.getElementById('transaction-list')!;
 
-// Desktop Forms
+// Desktop Forms & Containers
 const tabExpenseDesktop = document.getElementById('tab-expense-desktop') as HTMLButtonElement;
 const tabIncomeDesktop = document.getElementById('tab-income-desktop') as HTMLButtonElement;
 const txFormDesktop = document.getElementById('transaction-form-desktop') as HTMLFormElement;
@@ -74,6 +85,7 @@ const txAmountInputDesktop = document.getElementById('tx-amount-desktop') as HTM
 const txDescInputDesktop = document.getElementById('tx-desc-desktop') as HTMLInputElement;
 const txAccountSelectDesktop = document.getElementById('tx-account-desktop') as HTMLSelectElement;
 
+// Desktop Accounts
 const accountListDesktopEl = document.getElementById('account-list-desktop')!;
 const addAccountBtnDesktop = document.getElementById('add-account-btn-desktop') as HTMLButtonElement;
 const addAccountFormDesktop = document.getElementById('add-account-form-desktop') as HTMLFormElement;
@@ -81,6 +93,15 @@ const cancelAccountBtnDesktop = document.getElementById('cancel-account-btn-desk
 const acctNameInputDesktop = document.getElementById('acct-name-desktop') as HTMLInputElement;
 const acctTypeSelectDesktop = document.getElementById('acct-type-desktop') as HTMLSelectElement;
 const acctBalanceInputDesktop = document.getElementById('acct-balance-desktop') as HTMLInputElement;
+
+// Desktop EMIs
+const emiListDesktopEl = document.getElementById('emi-list-desktop')!;
+const addEmiBtnDesktop = document.getElementById('add-emi-btn-desktop') as HTMLButtonElement;
+const addEmiFormDesktop = document.getElementById('add-emi-form-desktop') as HTMLFormElement;
+const cancelEmiBtnDesktop = document.getElementById('cancel-emi-btn-desktop') as HTMLButtonElement;
+const emiDescInputDesktop = document.getElementById('emi-desc-desktop') as HTMLInputElement;
+const emiAmountInputDesktop = document.getElementById('emi-amount-desktop') as HTMLInputElement;
+const emiAccountSelectDesktop = document.getElementById('emi-account-desktop') as HTMLSelectElement;
 
 // Mobile Forms & Modal
 const txModal = document.getElementById('tx-modal')!;
@@ -95,6 +116,7 @@ const txAmountInputMobile = document.getElementById('tx-amount-mobile') as HTMLI
 const txDescInputMobile = document.getElementById('tx-desc-mobile') as HTMLInputElement;
 const txAccountSelectMobile = document.getElementById('tx-account-mobile') as HTMLSelectElement;
 
+// Mobile Accounts
 const accountListMobileEl = document.getElementById('account-list-mobile')!;
 const addAccountBtnMobile = document.getElementById('add-account-btn-mobile') as HTMLButtonElement;
 const addAccountFormMobile = document.getElementById('add-account-form-mobile') as HTMLFormElement;
@@ -103,13 +125,23 @@ const acctNameInputMobile = document.getElementById('acct-name-mobile') as HTMLI
 const acctTypeSelectMobile = document.getElementById('acct-type-mobile') as HTMLSelectElement;
 const acctBalanceInputMobile = document.getElementById('acct-balance-mobile') as HTMLInputElement;
 
+// Mobile EMIs
+const emiListMobileEl = document.getElementById('emi-list-mobile')!;
+const addEmiBtnMobile = document.getElementById('add-emi-btn-mobile') as HTMLButtonElement;
+const addEmiFormMobile = document.getElementById('add-emi-form-mobile') as HTMLFormElement;
+const cancelEmiBtnMobile = document.getElementById('cancel-emi-btn-mobile') as HTMLButtonElement;
+const emiDescInputMobile = document.getElementById('emi-desc-mobile') as HTMLInputElement;
+const emiAmountInputMobile = document.getElementById('emi-amount-mobile') as HTMLInputElement;
+const emiAccountSelectMobile = document.getElementById('emi-account-mobile') as HTMLSelectElement;
+
 // Mobile Nav Bar Switching
 const navHome = document.getElementById('nav-home')!;
 const navAccounts = document.getElementById('nav-accounts')!;
+const navEmis = document.getElementById('nav-emis')!;
 const homeView = document.getElementById('home-view')!;
 const transactionsContainer = document.getElementById('transactions-container')!;
 const accountsMobileView = document.getElementById('accounts-mobile-view')!;
-
+const emisMobileView = document.getElementById('emis-mobile-view')!;
 
 // --- Theme Logic ---
 function applyTheme() {
@@ -139,20 +171,32 @@ function getAccountBalance(accountId: string): number {
 }
 
 function calculateTotals() {
-    let income = 0;
-    let expense = 0;
-    let balance = 0;
+    let grossAssets = 0;
+    let debt = 0;
+    let investments = 0;
+    let emis = 0;
 
     state.accounts.forEach(a => {
-        balance += getAccountBalance(a.id);
+        const bal = getAccountBalance(a.id);
+        if (bal > 0) {
+            grossAssets += bal;
+            if (a.type === 'investment') investments += bal;
+        } else if (bal < 0) {
+            // Any negative balance is considered debt (credit cards typically go negative as you spend)
+            debt += Math.abs(bal);
+            if (a.type === 'investment') investments += bal; // maintain true value of investment even if negative (unlikely but safe)
+        }
     });
 
-    state.transactions.forEach(t => {
-        if (t.type === 'income') income += t.amount;
-        if (t.type === 'expense') expense += t.amount;
+    state.emis.forEach(e => {
+        emis += e.amount;
     });
 
-    return { income, expense, balance };
+    const netWorth = grossAssets - debt;
+    // Spendable Balance = Net Worth - Investments - Monthly Debt obligations (EMIs)
+    const spendable = netWorth - investments - emis;
+
+    return { spendable, netWorth, investments, debt, emis };
 }
 
 // --- UI Updates ---
@@ -164,30 +208,41 @@ function formatCurrency(amount: number) {
 }
 
 function updateUI() {
-    // Update totals
     const totals = calculateTotals();
-    totalBalanceEl.textContent = formatCurrency(totals.balance);
-    totalIncomeEl.textContent = formatCurrency(totals.income);
-    totalExpenseEl.textContent = formatCurrency(totals.expense);
+    if (spendableBalanceEl) spendableBalanceEl.textContent = formatCurrency(totals.spendable);
+    if (netWorthEl) netWorthEl.textContent = formatCurrency(totals.netWorth);
+    if (totalInvestmentsEl) totalInvestmentsEl.textContent = formatCurrency(totals.investments);
+    if (totalDebtEl) totalDebtEl.textContent = formatCurrency(totals.debt);
+    if (totalEmisEl) totalEmisEl.textContent = formatCurrency(totals.emis);
 
-    // Update account selects (both desktop and mobile)
-    const renderOptions = () => {
-        if (state.accounts.length === 0) {
-            return '<option value="" disabled selected>No accounts found</option>';
+    // Apply colors to hero card based on spendable balance
+    if (spendableBalanceEl) {
+        if (totals.spendable < 0) {
+            spendableBalanceEl.style.color = 'var(--danger-color)';
+        } else {
+            spendableBalanceEl.style.color = 'var(--primary-color)';
         }
-        return state.accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+    }
+
+    const renderAccountOptions = () => {
+        if (state.accounts.length === 0) return '<option value="" disabled selected>No accounts found</option>';
+        return state.accounts.map(a => `<option value="${a.id}">${a.name} (${a.type})</option>`).join('');
     };
 
-    txAccountSelectDesktop.innerHTML = renderOptions();
-    txAccountSelectMobile.innerHTML = renderOptions();
+    if (txAccountSelectDesktop) txAccountSelectDesktop.innerHTML = renderAccountOptions();
+    if (txAccountSelectMobile) txAccountSelectMobile.innerHTML = renderAccountOptions();
+    if (emiAccountSelectDesktop) emiAccountSelectDesktop.innerHTML = renderAccountOptions();
+    if (emiAccountSelectMobile) emiAccountSelectMobile.innerHTML = renderAccountOptions();
 
-    // Render accounts list function
+    // Render accounts list
     const renderAccounts = (container: HTMLElement) => {
+        if (!container) return;
         container.innerHTML = '';
         if (state.accounts.length === 0) {
             container.innerHTML = '<div class="empty-state"><ion-icon name="wallet-outline"></ion-icon><p>No accounts yet.</p></div>';
         } else {
             state.accounts.forEach(a => {
+                const bal = getAccountBalance(a.id);
                 const item = document.createElement('div');
                 item.className = 'account-item';
                 item.innerHTML = `
@@ -195,7 +250,7 @@ function updateUI() {
             <h5>${a.name}</h5>
             <p>${a.type.charAt(0).toUpperCase() + a.type.slice(1)}</p>
           </div>
-          <div class="account-balance">${formatCurrency(getAccountBalance(a.id))}</div>
+          <div class="account-balance" style="color: ${bal < 0 ? 'var(--danger-color)' : 'inherit'}">${formatCurrency(Math.abs(bal))} ${bal < 0 ? '(Owed)' : ''}</div>
         `;
                 container.appendChild(item);
             });
@@ -205,65 +260,103 @@ function updateUI() {
     renderAccounts(accountListDesktopEl);
     renderAccounts(accountListMobileEl);
 
-    // Render transactions
-    txListEl.innerHTML = '';
-    if (state.transactions.length === 0) {
-        txListEl.innerHTML = '<div class="empty-state"><ion-icon name="receipt-outline"></ion-icon><p>No recent transactions.</p></div>';
-    } else {
-        // Show newest first
-        [...state.transactions].reverse().forEach(t => {
-            const acct = state.accounts.find(a => a.id === t.accountId);
-            const item = document.createElement('div');
-            item.className = 'transaction-item tx-' + t.type;
-
-            const iconName = t.type === 'income' ? 'arrow-down' : 'arrow-up';
-            const sign = t.type === 'income' ? '+' : '-';
-
-            item.innerHTML = `
-        <div class="transaction-info">
-          <div class="transaction-icon">
-            <ion-icon name="${iconName}"></ion-icon>
+    // Render EMIs list
+    const renderEmis = (container: HTMLElement) => {
+        if (!container) return;
+        container.innerHTML = '';
+        if (state.emis.length === 0) {
+            container.innerHTML = '<div class="empty-state"><ion-icon name="calendar-outline"></ion-icon><p>No active EMIs.</p></div>';
+        } else {
+            state.emis.forEach(e => {
+                const item = document.createElement('div');
+                item.className = 'account-item';
+                item.innerHTML = `
+          <div class="account-info">
+            <h5>${e.description}</h5>
+            <p>Deducts from: ${state.accounts.find(a => a.id === e.accountId)?.name || 'Unknown'}</p>
           </div>
-          <div class="transaction-details">
-            <h4>${t.description}</h4>
-            <p>${acct ? acct.name : 'Unknown Account'} • ${new Date(t.date).toLocaleDateString()}</p>
+          <div style="display: flex; align-items: center; gap: 1rem;">
+             <div class="account-balance tx-expense">${formatCurrency(e.amount)} /mo</div>
+             <button class="btn-icon delete-emi-btn" data-id="${e.id}" style="width: 2rem; height: 2rem; border-color: transparent; box-shadow: none;">
+               <ion-icon name="close-circle-outline" style="color: var(--danger-color); font-size: 1.5rem;"></ion-icon>
+             </button>
           </div>
-        </div>
-        <div style="display: flex; align-items: center; gap: 1rem;">
-          <div class="transaction-amount">${sign}${formatCurrency(t.amount)}</div>
-          <div class="transaction-actions">
-            <button class="btn-icon delete-tx-btn" data-id="${t.id}" style="width: 2rem; height: 2rem;">
-              <ion-icon name="trash-outline" style="color: var(--danger-color);"></ion-icon>
-            </button>
-          </div>
-        </div>
-      `;
-            txListEl.appendChild(item);
-        });
+        `;
+                container.appendChild(item);
+            });
+        }
 
-        // Attach delete handlers
-        document.querySelectorAll('.delete-tx-btn').forEach(btn => {
+        // Attach delete handlers for EMIs
+        container.querySelectorAll('.delete-emi-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const id = (e.currentTarget as HTMLButtonElement).dataset.id;
                 if (id) {
-                    state.transactions = state.transactions.filter(t => t.id !== id);
+                    state.emis = state.emis.filter(tx => tx.id !== id);
                     saveState();
                 }
             });
         });
+    };
+
+    renderEmis(emiListDesktopEl);
+    renderEmis(emiListMobileEl);
+
+    // Render transactions
+    if (txListEl) {
+        txListEl.innerHTML = '';
+        if (state.transactions.length === 0) {
+            txListEl.innerHTML = '<div class="empty-state"><ion-icon name="receipt-outline"></ion-icon><p>No recent transactions.</p></div>';
+        } else {
+            // Show newest first
+            [...state.transactions].reverse().forEach(t => {
+                const acct = state.accounts.find(a => a.id === t.accountId);
+                const item = document.createElement('div');
+                item.className = 'transaction-item tx-' + t.type;
+
+                const iconName = t.type === 'income' ? 'arrow-down' : 'arrow-up';
+                const sign = t.type === 'income' ? '+' : '-';
+
+                item.innerHTML = `
+          <div class="transaction-info">
+            <div class="transaction-icon">
+              <ion-icon name="${iconName}"></ion-icon>
+            </div>
+            <div class="transaction-details">
+              <h4>${t.description}</h4>
+              <p>${acct ? acct.name : 'Unknown Account'} • ${new Date(t.date).toLocaleDateString()}</p>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 1rem;">
+            <div class="transaction-amount">${sign}${formatCurrency(t.amount)}</div>
+            <div class="transaction-actions">
+              <button class="btn-icon delete-tx-btn" data-id="${t.id}" style="width: 2rem; height: 2rem;">
+                <ion-icon name="trash-outline" style="color: var(--danger-color);"></ion-icon>
+              </button>
+            </div>
+          </div>
+        `;
+                txListEl.appendChild(item);
+            });
+
+            // Attach delete handlers for transactions
+            document.querySelectorAll('.delete-tx-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const id = (e.currentTarget as HTMLButtonElement).dataset.id;
+                    if (id) {
+                        state.transactions = state.transactions.filter(t => t.id !== id);
+                        saveState();
+                    }
+                });
+            });
+        }
     }
 }
 
+// --- Event Handlers ---
 
-// --- Transaction Event Handlers ---
-function setupTransactionForm(
-    form: HTMLFormElement,
-    typeInput: HTMLInputElement,
-    amountInput: HTMLInputElement,
-    descInput: HTMLInputElement,
-    accountSelect: HTMLSelectElement,
-    onSuccess?: () => void
-) {
+// Transactions
+function setupTransactionForm(form: HTMLFormElement, typeInput: HTMLInputElement, amountInput: HTMLInputElement, descInput: HTMLInputElement, accountSelect: HTMLSelectElement, onSuccess?: () => void) {
+    if (!form) return;
     form.addEventListener('submit', (e) => {
         e.preventDefault();
         if (state.accounts.length === 0) {
@@ -283,37 +376,18 @@ function setupTransactionForm(
 
         amountInput.value = '';
         descInput.value = '';
-
         if (onSuccess) onSuccess();
     });
 }
 
-// Bind Desktop Add TX
 setupTransactionForm(txFormDesktop, txTypeInputDesktop, txAmountInputDesktop, txDescInputDesktop, txAccountSelectDesktop);
-
-// Bind Mobile Modal Add TX
 setupTransactionForm(txFormMobile, txTypeInputMobile, txAmountInputMobile, txDescInputMobile, txAccountSelectMobile, () => {
-    txModal.classList.remove('open');
+    if (txModal) txModal.classList.remove('open');
 });
 
-// Setup Tabs Desktop
-tabExpenseDesktop.addEventListener('click', () => { tabExpenseDesktop.classList.add('active'); tabIncomeDesktop.classList.remove('active'); txTypeInputDesktop.value = 'expense'; });
-tabIncomeDesktop.addEventListener('click', () => { tabIncomeDesktop.classList.add('active'); tabExpenseDesktop.classList.remove('active'); txTypeInputDesktop.value = 'income'; });
-
-// Setup Tabs Mobile
-tabExpenseMobile.addEventListener('click', () => { tabExpenseMobile.classList.add('active'); tabIncomeMobile.classList.remove('active'); txTypeInputMobile.value = 'expense'; });
-tabIncomeMobile.addEventListener('click', () => { tabIncomeMobile.classList.add('active'); tabExpenseMobile.classList.remove('active'); txTypeInputMobile.value = 'income'; });
-
-
-// --- Account Event Handlers ---
-function setupAccountForm(
-    btn: HTMLButtonElement,
-    form: HTMLFormElement,
-    cancelBtn: HTMLButtonElement,
-    nameInput: HTMLInputElement,
-    typeSelect: HTMLSelectElement,
-    balanceInput: HTMLInputElement
-) {
+// Accounts
+function setupAccountForm(btn: HTMLButtonElement, form: HTMLFormElement, cancelBtn: HTMLButtonElement, nameInput: HTMLInputElement, typeSelect: HTMLSelectElement, balanceInput: HTMLInputElement) {
+    if (!btn || !form) return;
     btn.addEventListener('click', () => { form.style.display = 'block'; });
     cancelBtn.addEventListener('click', () => { form.style.display = 'none'; form.reset(); });
 
@@ -323,7 +397,9 @@ function setupAccountForm(
             id: crypto.randomUUID(),
             name: nameInput.value.trim(),
             type: typeSelect.value,
-            balance: parseFloat(balanceInput.value) || 0
+            // If user inputs a positive number for a credit card balance, typically it means they owe that much right now.
+            // E.g., Credit Card with 500 balance = -500 net cash.
+            balance: typeSelect.value === 'credit' ? -(parseFloat(balanceInput.value) || 0) : (parseFloat(balanceInput.value) || 0)
         };
         state.accounts.push(newAccount);
         saveState();
@@ -332,79 +408,126 @@ function setupAccountForm(
     });
 }
 
-// Bind Account Handlers
 setupAccountForm(addAccountBtnDesktop, addAccountFormDesktop, cancelAccountBtnDesktop, acctNameInputDesktop, acctTypeSelectDesktop, acctBalanceInputDesktop);
 setupAccountForm(addAccountBtnMobile, addAccountFormMobile, cancelAccountBtnMobile, acctNameInputMobile, acctTypeSelectMobile, acctBalanceInputMobile);
 
+// EMIs
+function setupEmiForm(btn: HTMLButtonElement, form: HTMLFormElement, cancelBtn: HTMLButtonElement, descInput: HTMLInputElement, amountInput: HTMLInputElement, accountSelect: HTMLSelectElement) {
+    if (!btn || !form) return;
+    btn.addEventListener('click', () => { form.style.display = 'block'; });
+    cancelBtn.addEventListener('click', () => { form.style.display = 'none'; form.reset(); });
 
-// --- Mobile Navigation Logic ---
-mobileAddBtn.addEventListener('click', () => {
-    txModal.classList.add('open');
-});
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (state.accounts.length === 0) {
+            alert("Please create an account first to link to an EMI.");
+            return;
+        }
+        const newEmi: EMI = {
+            id: crypto.randomUUID(),
+            description: descInput.value.trim(),
+            amount: parseFloat(amountInput.value),
+            accountId: accountSelect.value
+        };
+        state.emis.push(newEmi);
+        saveState();
+        form.reset();
+        form.style.display = 'none';
+    });
+}
 
-closeModalBtn.addEventListener('click', () => {
-    txModal.classList.remove('open');
-});
+setupEmiForm(addEmiBtnDesktop, addEmiFormDesktop, cancelEmiBtnDesktop, emiDescInputDesktop, emiAmountInputDesktop, emiAccountSelectDesktop);
+setupEmiForm(addEmiBtnMobile, addEmiFormMobile, cancelEmiBtnMobile, emiDescInputMobile, emiAmountInputMobile, emiAccountSelectMobile);
 
-navHome.addEventListener('click', (e) => {
-    e.preventDefault();
-    navHome.classList.add('active');
-    navAccounts.classList.remove('active');
+// Tabs Desktop & Mobile
+if (tabExpenseDesktop) tabExpenseDesktop.addEventListener('click', () => { tabExpenseDesktop.classList.add('active'); tabIncomeDesktop.classList.remove('active'); txTypeInputDesktop.value = 'expense'; });
+if (tabIncomeDesktop) tabIncomeDesktop.addEventListener('click', () => { tabIncomeDesktop.classList.add('active'); tabExpenseDesktop.classList.remove('active'); txTypeInputDesktop.value = 'income'; });
+if (tabExpenseMobile) tabExpenseMobile.addEventListener('click', () => { tabExpenseMobile.classList.add('active'); tabIncomeMobile.classList.remove('active'); txTypeInputMobile.value = 'expense'; });
+if (tabIncomeMobile) tabIncomeMobile.addEventListener('click', () => { tabIncomeMobile.classList.add('active'); tabExpenseMobile.classList.remove('active'); txTypeInputMobile.value = 'income'; });
 
-    homeView.style.display = 'grid'; // Dashboard cards mostly grid
-    transactionsContainer.style.display = 'block';
-    accountsMobileView.style.display = 'none';
-});
+// Mobile Navigation
+if (mobileAddBtn) mobileAddBtn.addEventListener('click', () => { txModal.classList.add('open'); });
+if (closeModalBtn) closeModalBtn.addEventListener('click', () => { txModal.classList.remove('open'); });
 
-navAccounts.addEventListener('click', (e) => {
-    e.preventDefault();
-    navAccounts.classList.add('active');
-    navHome.classList.remove('active');
+const resetMobileViews = () => {
+    if (homeView) homeView.style.display = 'none';
+    if (transactionsContainer) transactionsContainer.style.display = 'none';
+    if (accountsMobileView) accountsMobileView.style.display = 'none';
+    if (emisMobileView) emisMobileView.style.display = 'none';
+    if (navHome) navHome.classList.remove('active');
+    if (navAccounts) navAccounts.classList.remove('active');
+    if (navEmis) navEmis.classList.remove('active');
+};
 
-    homeView.style.display = 'none';
-    transactionsContainer.style.display = 'none';
-    accountsMobileView.style.display = 'block';
-});
+if (navHome) {
+    navHome.addEventListener('click', (e) => {
+        e.preventDefault();
+        resetMobileViews();
+        navHome.classList.add('active');
+        homeView.style.display = 'grid';
+        transactionsContainer.style.display = 'block';
+    });
+}
 
+if (navAccounts) {
+    navAccounts.addEventListener('click', (e) => {
+        e.preventDefault();
+        resetMobileViews();
+        navAccounts.classList.add('active');
+        accountsMobileView.style.display = 'block';
+    });
+}
+
+if (navEmis) {
+    navEmis.addEventListener('click', (e) => {
+        e.preventDefault();
+        resetMobileViews();
+        navEmis.classList.add('active');
+        emisMobileView.style.display = 'block';
+    });
+}
 
 // --- Export / Import ---
-exportBtn.addEventListener('click', () => {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
-    const dlAnchorElem = document.createElement('a');
-    dlAnchorElem.setAttribute("href", dataStr);
-    dlAnchorElem.setAttribute("download", `money_manager_backup_${new Date().toISOString().split('T')[0]}.json`);
-    dlAnchorElem.click();
-});
+if (exportBtn) {
+    exportBtn.addEventListener('click', () => {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
+        const dlAnchorElem = document.createElement('a');
+        dlAnchorElem.setAttribute("href", dataStr);
+        dlAnchorElem.setAttribute("download", `money_manager_backup_${new Date().toISOString().split('T')[0]}.json`);
+        dlAnchorElem.click();
+    });
+}
 
-importInput.addEventListener('change', (e) => {
-    const file = (e.target as HTMLInputElement).files?.[0];
-    if (!file) return;
+if (importInput) {
+    importInput.addEventListener('change', (e) => {
+        const file = (e.target as HTMLInputElement).files?.[0];
+        if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-        try {
-            const importedState = JSON.parse(event.target?.result as string);
-            if (importedState && Array.isArray(importedState.accounts) && Array.isArray(importedState.transactions)) {
-                state = {
-                    ...state,
-                    accounts: importedState.accounts,
-                    transactions: importedState.transactions,
-                };
-                saveState();
-                alert('Data imported successfully!');
-            } else {
-                alert('Invalid backup file format.');
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const importedState = JSON.parse(event.target?.result as string);
+                if (importedState && Array.isArray(importedState.accounts) && Array.isArray(importedState.transactions)) {
+                    state = {
+                        ...state,
+                        accounts: importedState.accounts,
+                        transactions: importedState.transactions,
+                        emis: Array.isArray(importedState.emis) ? importedState.emis : []
+                    };
+                    saveState();
+                    alert('Data imported successfully!');
+                } else {
+                    alert('Invalid backup file format.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Error parsing backup file.');
             }
-        } catch (err) {
-            console.error(err);
-            alert('Error parsing backup file.');
-        }
-        // reset input
-        importInput.value = '';
-    };
-    reader.readAsText(file);
-});
-
+            importInput.value = '';
+        };
+        reader.readAsText(file);
+    });
+}
 
 // --- Init ---
 loadState();
