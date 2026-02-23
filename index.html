@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Money Manager - Premium Budget Tracker</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -36,7 +36,7 @@
             </div>
         </header>
 
-        <div class="dashboard-grid">
+        <div class="dashboard-grid" id="home-view">
             <div class="glass summary-card">
                 <div class="summary-header">
                     <span>Total Balance</span>
@@ -67,32 +67,32 @@
         </div>
 
         <div class="main-grid">
-            <div class="sidebar">
+            <div class="sidebar desktop-only">
                 <div class="glass" style="padding: 1.5rem; margin-bottom: 1.5rem;">
                     <div class="section-header">
                         <h2>Add Transaction</h2>
                     </div>
 
                     <div class="tabs">
-                        <button class="tab active" id="tab-expense" data-type="expense">Expense</button>
-                        <button class="tab" id="tab-income" data-type="income">Income</button>
+                        <button class="tab active" id="tab-expense-desktop" data-type="expense">Expense</button>
+                        <button class="tab" id="tab-income-desktop" data-type="income">Income</button>
                     </div>
 
-                    <form id="transaction-form">
-                        <input type="hidden" id="tx-type" value="expense">
+                    <form id="transaction-form-desktop">
+                        <input type="hidden" id="tx-type-desktop" value="expense">
                         <div class="form-group">
-                            <label for="tx-amount">Amount</label>
-                            <input type="number" class="form-control" id="tx-amount" placeholder="0.00" step="0.01"
-                                required min="0.01">
+                            <label for="tx-amount-desktop">Amount</label>
+                            <input type="number" class="form-control" id="tx-amount-desktop" placeholder="0.00"
+                                step="0.01" required min="0.01">
                         </div>
                         <div class="form-group">
-                            <label for="tx-desc">Description</label>
-                            <input type="text" class="form-control" id="tx-desc" placeholder="Groceries, Salary, etc."
-                                required>
+                            <label for="tx-desc-desktop">Description</label>
+                            <input type="text" class="form-control" id="tx-desc-desktop"
+                                placeholder="Groceries, Salary, etc." required>
                         </div>
                         <div class="form-group">
-                            <label for="tx-account">Account</label>
-                            <select class="form-control" id="tx-account" required>
+                            <label for="tx-account-desktop">Account</label>
+                            <select class="form-control" id="tx-account-desktop" required>
                                 <!-- Populated by JS -->
                             </select>
                         </div>
@@ -103,28 +103,28 @@
                     </form>
                 </div>
 
-                <div class="glass" style="padding: 1.5rem;">
+                <div class="glass accounts-container" style="padding: 1.5rem;" id="accounts-desktop-container">
                     <div class="section-header">
                         <h2>My Accounts</h2>
-                        <button class="btn-icon" id="add-account-btn" aria-label="Add Account"
+                        <button class="btn-icon" id="add-account-btn-desktop" aria-label="Add Account"
                             style="width: 2rem; height: 2rem;">
                             <ion-icon name="add"></ion-icon>
                         </button>
                     </div>
-                    <div class="account-list" id="account-list">
+                    <div class="account-list" id="account-list-desktop">
                         <!-- Populated by JS -->
                     </div>
 
-                    <form id="add-account-form"
+                    <form id="add-account-form-desktop"
                         style="display: none; margin-top: 1rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
                         <div class="form-group">
-                            <label for="acct-name">Account Name</label>
-                            <input type="text" class="form-control" id="acct-name" placeholder="Bank, Cash, etc."
-                                required>
+                            <label for="acct-name-desktop">Account Name</label>
+                            <input type="text" class="form-control" id="acct-name-desktop"
+                                placeholder="Bank, Cash, etc." required>
                         </div>
                         <div class="form-group">
-                            <label for="acct-type">Type</label>
-                            <select class="form-control" id="acct-type">
+                            <label for="acct-type-desktop">Type</label>
+                            <select class="form-control" id="acct-type-desktop">
                                 <option value="bank">Bank</option>
                                 <option value="cash">Cash</option>
                                 <option value="credit">Credit Card</option>
@@ -132,22 +132,22 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="acct-balance">Initial Balance</label>
-                            <input type="number" class="form-control" id="acct-balance" placeholder="0.00" step="0.01"
-                                value="0.00">
+                            <label for="acct-balance-desktop">Initial Balance</label>
+                            <input type="number" class="form-control" id="acct-balance-desktop" placeholder="0.00"
+                                step="0.01" value="0.00">
                         </div>
                         <div style="display: flex; gap: 0.5rem;">
                             <button type="submit" class="btn-primary"
                                 style="flex: 1; justify-content: center; padding: 0.5rem;">Save</button>
-                            <button type="button" class="btn-icon" id="cancel-account-btn"
+                            <button type="button" class="btn-icon" id="cancel-account-btn-desktop"
                                 style="border-radius: var(--radius-md);"><ion-icon name="close"></ion-icon></button>
                         </div>
                     </form>
                 </div>
             </div>
 
-            <div class="main-content">
-                <div class="glass" style="padding: 1.5rem; min-height: 400px;">
+            <div class="main-content" id="transactions-container">
+                <div class="glass" style="padding: 1.5rem; min-height: 400px; padding-bottom: 6rem;">
                     <div class="section-header">
                         <h2>Recent Transactions</h2>
                     </div>
@@ -156,8 +156,113 @@
                     </div>
                 </div>
             </div>
+
+            <div class="main-content mobile-only" id="accounts-mobile-view" style="display: none;">
+                <div class="glass" style="padding: 1.5rem; min-height: 400px; padding-bottom: 6rem;">
+                    <div class="section-header">
+                        <h2>My Accounts</h2>
+                        <button class="btn-icon" id="add-account-btn-mobile" aria-label="Add Account"
+                            style="width: 2rem; height: 2rem;">
+                            <ion-icon name="add"></ion-icon>
+                        </button>
+                    </div>
+                    <div class="account-list" id="account-list-mobile">
+                        <!-- Populated by JS -->
+                    </div>
+
+                    <form id="add-account-form-mobile"
+                        style="display: none; margin-top: 1rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                        <div class="form-group">
+                            <label for="acct-name-mobile">Account Name</label>
+                            <input type="text" class="form-control" id="acct-name-mobile" placeholder="Bank, Cash, etc."
+                                required>
+                        </div>
+                        <div class="form-group">
+                            <label for="acct-type-mobile">Type</label>
+                            <select class="form-control" id="acct-type-mobile">
+                                <option value="bank">Bank</option>
+                                <option value="cash">Cash</option>
+                                <option value="credit">Credit Card</option>
+                                <option value="investment">Investment</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="acct-balance-mobile">Initial Balance</label>
+                            <input type="number" class="form-control" id="acct-balance-mobile" placeholder="0.00"
+                                step="0.01" value="0.00">
+                        </div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button type="submit" class="btn-primary"
+                                style="flex: 1; justify-content: center; padding: 0.5rem;">Save</button>
+                            <button type="button" class="btn-icon" id="cancel-account-btn-mobile"
+                                style="border-radius: var(--radius-md);"><ion-icon name="close"></ion-icon></button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="mobile-nav glass mobile-only" id="mobile-nav-bar">
+        <a href="#" class="nav-item active" id="nav-home">
+            <ion-icon name="home-outline"></ion-icon>
+            <span>Home</span>
+        </a>
+
+        <div class="nav-fab-container">
+            <button class="nav-fab" id="mobile-add-btn">
+                <ion-icon name="add"></ion-icon>
+            </button>
+        </div>
+
+        <a href="#" class="nav-item" id="nav-accounts">
+            <ion-icon name="card-outline"></ion-icon>
+            <span>Accounts</span>
+        </a>
+    </nav>
+
+    <!-- Mobile Add Transaction Modal -->
+    <div class="modal-overlay" id="tx-modal">
+        <div class="modal-content glass">
+            <div class="modal-header">
+                <h2>Add Transaction</h2>
+                <button class="btn-icon" id="close-modal-btn">
+                    <ion-icon name="close"></ion-icon>
+                </button>
+            </div>
+
+            <div class="tabs">
+                <button class="tab active" id="tab-expense-mobile" data-type="expense">Expense</button>
+                <button class="tab" id="tab-income-mobile" data-type="income">Income</button>
+            </div>
+
+            <form id="transaction-form-mobile">
+                <input type="hidden" id="tx-type-mobile" value="expense">
+                <div class="form-group">
+                    <label for="tx-amount-mobile">Amount</label>
+                    <input type="number" class="form-control" id="tx-amount-mobile" placeholder="0.00" step="0.01"
+                        required min="0.01">
+                </div>
+                <div class="form-group">
+                    <label for="tx-desc-mobile">Description</label>
+                    <input type="text" class="form-control" id="tx-desc-mobile" placeholder="Groceries, Salary, etc."
+                        required>
+                </div>
+                <div class="form-group">
+                    <label for="tx-account-mobile">Account</label>
+                    <select class="form-control" id="tx-account-mobile" required>
+                        <!-- Populated by JS -->
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary" style="width: 100%; justify-content: center;">
+                    <ion-icon name="add-circle-outline"></ion-icon>
+                    Save Transaction
+                </button>
+            </form>
+        </div>
+    </div>
+
     <script type="module" src="/src/main.ts"></script>
 </body>
 
