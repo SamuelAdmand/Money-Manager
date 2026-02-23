@@ -6,6 +6,7 @@ interface Account {
     name: string;
     type: string;
     balance: number;
+    limit?: number; // For Credit Cards
 }
 
 interface Transaction {
@@ -75,6 +76,7 @@ const totalInvestmentsEl = document.getElementById('total-investments')!;
 const totalDebtEl = document.getElementById('total-debt')!;
 const totalEmisEl = document.getElementById('total-emis')!;
 const txListEl = document.getElementById('transaction-list')!;
+const txListMobileSharedEl = document.getElementById('transaction-list-mobile')!;
 
 // Desktop Forms & Containers
 const tabExpenseDesktop = document.getElementById('tab-expense-desktop') as HTMLButtonElement;
@@ -87,12 +89,18 @@ const txAccountSelectDesktop = document.getElementById('tx-account-desktop') as 
 
 // Desktop Accounts
 const accountListDesktopEl = document.getElementById('account-list-desktop')!;
+const investmentListDesktopEl = document.getElementById('investment-list-desktop')!;
 const addAccountBtnDesktop = document.getElementById('add-account-btn-desktop') as HTMLButtonElement;
 const addAccountFormDesktop = document.getElementById('add-account-form-desktop') as HTMLFormElement;
 const cancelAccountBtnDesktop = document.getElementById('cancel-account-btn-desktop') as HTMLButtonElement;
 const acctNameInputDesktop = document.getElementById('acct-name-desktop') as HTMLInputElement;
 const acctTypeSelectDesktop = document.getElementById('acct-type-desktop') as HTMLSelectElement;
 const acctBalanceInputDesktop = document.getElementById('acct-balance-desktop') as HTMLInputElement;
+const acctBalanceGroupDesktop = document.getElementById('acct-balance-group-desktop')!;
+const acctLimitGroupDesktop = document.getElementById('acct-limit-group-desktop')!;
+const acctLimitInputDesktop = document.getElementById('acct-limit-desktop') as HTMLInputElement;
+const acctOutstandingGroupDesktop = document.getElementById('acct-outstanding-group-desktop')!;
+const acctOutstandingInputDesktop = document.getElementById('acct-outstanding-desktop') as HTMLInputElement;
 
 // Desktop EMIs
 const emiListDesktopEl = document.getElementById('emi-list-desktop')!;
@@ -103,9 +111,16 @@ const emiDescInputDesktop = document.getElementById('emi-desc-desktop') as HTMLI
 const emiAmountInputDesktop = document.getElementById('emi-amount-desktop') as HTMLInputElement;
 const emiAccountSelectDesktop = document.getElementById('emi-account-desktop') as HTMLSelectElement;
 
-// Mobile Forms & Modal
-const txModal = document.getElementById('tx-modal')!;
-const closeModalBtn = document.getElementById('close-modal-btn') as HTMLButtonElement;
+// Mobile Forms & Bottom Sheets
+const globalOverlay = document.getElementById('global-overlay')!;
+const txBottomSheet = document.getElementById('tx-bottom-sheet')!;
+const accountBottomSheet = document.getElementById('account-bottom-sheet')!;
+const emiBottomSheet = document.getElementById('emi-bottom-sheet')!;
+
+const closeTxSheetBtn = document.getElementById('close-tx-sheet') as HTMLButtonElement;
+const closeAccountSheetBtn = document.getElementById('close-account-sheet') as HTMLButtonElement;
+const closeEmiSheetBtn = document.getElementById('close-emi-sheet') as HTMLButtonElement;
+
 const mobileAddBtn = document.getElementById('mobile-add-btn') as HTMLButtonElement;
 
 const tabExpenseMobile = document.getElementById('tab-expense-mobile') as HTMLButtonElement;
@@ -118,30 +133,35 @@ const txAccountSelectMobile = document.getElementById('tx-account-mobile') as HT
 
 // Mobile Accounts
 const accountListMobileEl = document.getElementById('account-list-mobile')!;
+const investmentListMobileEl = document.getElementById('investment-list-mobile')!;
 const addAccountBtnMobile = document.getElementById('add-account-btn-mobile') as HTMLButtonElement;
 const addAccountFormMobile = document.getElementById('add-account-form-mobile') as HTMLFormElement;
-const cancelAccountBtnMobile = document.getElementById('cancel-account-btn-mobile') as HTMLButtonElement;
 const acctNameInputMobile = document.getElementById('acct-name-mobile') as HTMLInputElement;
 const acctTypeSelectMobile = document.getElementById('acct-type-mobile') as HTMLSelectElement;
 const acctBalanceInputMobile = document.getElementById('acct-balance-mobile') as HTMLInputElement;
+const acctBalanceGroupMobile = document.getElementById('acct-balance-group-mobile')!;
+const acctLimitGroupMobile = document.getElementById('acct-limit-group-mobile')!;
+const acctLimitInputMobile = document.getElementById('acct-limit-mobile') as HTMLInputElement;
+const acctOutstandingGroupMobile = document.getElementById('acct-outstanding-group-mobile')!;
+const acctOutstandingInputMobile = document.getElementById('acct-outstanding-mobile') as HTMLInputElement;
 
 // Mobile EMIs
 const emiListMobileEl = document.getElementById('emi-list-mobile')!;
 const addEmiBtnMobile = document.getElementById('add-emi-btn-mobile') as HTMLButtonElement;
 const addEmiFormMobile = document.getElementById('add-emi-form-mobile') as HTMLFormElement;
-const cancelEmiBtnMobile = document.getElementById('cancel-emi-btn-mobile') as HTMLButtonElement;
 const emiDescInputMobile = document.getElementById('emi-desc-mobile') as HTMLInputElement;
 const emiAmountInputMobile = document.getElementById('emi-amount-mobile') as HTMLInputElement;
 const emiAccountSelectMobile = document.getElementById('emi-account-mobile') as HTMLSelectElement;
 
 // Mobile Nav Bar Switching
 const navHome = document.getElementById('nav-home')!;
-const navTransactions = document.getElementById('nav-transactions')!;
 const navAccounts = document.getElementById('nav-accounts')!;
+const navTransactions = document.getElementById('nav-transactions')!;
 const navEmis = document.getElementById('nav-emis')!;
 const homeView = document.getElementById('home-view')!;
-const transactionsContainer = document.getElementById('transactions-container')!;
+const transactionsViewDesktop = document.getElementById('transactions-container')!;
 const accountsMobileView = document.getElementById('accounts-mobile-view')!;
+const transactionsMobileView = document.getElementById('transactions-mobile-view')!;
 const emisMobileView = document.getElementById('emis-mobile-view')!;
 
 // --- Theme Logic ---
@@ -226,9 +246,9 @@ function updateUI() {
     }
 
     const renderAccountOptions = () => {
-        const eligibleAccounts = state.accounts.filter(a => a.type !== 'investment');
-        if (eligibleAccounts.length === 0) return '<option value="" disabled selected>No accounts found</option>';
-        return eligibleAccounts.map(a => `<option value="${a.id}">${a.name} (${a.type})</option>`).join('');
+        const withdrawable = state.accounts.filter(a => a.type !== 'investment');
+        if (withdrawable.length === 0) return '<option value="" disabled selected>No source accounts found</option>';
+        return withdrawable.map(a => `<option value="${a.id}">${a.name} (${a.type})</option>`).join('');
     };
 
     if (txAccountSelectDesktop) txAccountSelectDesktop.innerHTML = renderAccountOptions();
@@ -237,30 +257,66 @@ function updateUI() {
     if (emiAccountSelectMobile) emiAccountSelectMobile.innerHTML = renderAccountOptions();
 
     // Render accounts list
-    const renderAccounts = (container: HTMLElement) => {
+    const renderAccounts = (container: HTMLElement, type: 'standard' | 'investment') => {
         if (!container) return;
         container.innerHTML = '';
-        if (state.accounts.length === 0) {
-            container.innerHTML = '<div class="empty-state"><ion-icon name="wallet-outline"></ion-icon><p>No accounts yet.</p></div>';
+
+        const filtered = state.accounts.filter(a => type === 'investment' ? a.type === 'investment' : a.type !== 'investment');
+
+        if (filtered.length === 0) {
+            container.innerHTML = `<div class="empty-state"><ion-icon name="${type === 'investment' ? 'bar-chart-outline' : 'wallet-outline'}"></ion-icon><p>No ${type}s yet.</p></div>`;
         } else {
-            state.accounts.forEach(a => {
+            filtered.forEach(a => {
                 const bal = getAccountBalance(a.id);
                 const item = document.createElement('div');
-                item.className = 'account-item';
-                item.innerHTML = `
-          <div class="account-info">
-            <h5>${a.name}</h5>
-            <p>${a.type.charAt(0).toUpperCase() + a.type.slice(1)}</p>
-          </div>
-          <div class="account-balance" style="color: ${bal < 0 ? 'var(--danger-color)' : 'inherit'}">${formatCurrency(Math.abs(bal))} ${bal < 0 ? '(Owed)' : ''}</div>
-        `;
+                const isCredit = a.type === 'credit';
+                item.className = isCredit ? 'account-item credit-card-ui' : 'account-item';
+
+                let balanceDisplay = formatCurrency(Math.abs(bal));
+                let balanceLabel = bal < 0 ? '(Owed)' : '';
+
+                if (isCredit) {
+                    const limit = a.limit || 0;
+                    item.innerHTML = `
+                    <div class="card-header">
+                        <div class="account-info">
+                            <h5>${a.name}</h5>
+                            <p>${a.type.toUpperCase()}</p>
+                        </div>
+                        <button class="repay-btn" onclick="window.repayDebt('${a.id}')">
+                            <ion-icon name="arrow-undo-outline"></ion-icon>
+                            Repay
+                        </button>
+                    </div>
+                    <div class="card-chip"></div>
+                    <div class="card-body">
+                        <div class="outstanding-amount">${balanceDisplay}</div>
+                        <div class="outstanding-label">CURRENT OUTSTANDING</div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="card-limit">
+                            LIMIT: ${formatCurrency(limit)}
+                        </div>
+                    </div>
+                `;
+                } else {
+                    item.innerHTML = `
+                    <div class="account-info">
+                        <h5>${a.name}</h5>
+                        <p>${a.type.charAt(0).toUpperCase() + a.type.slice(1)}</p>
+                    </div>
+                    <div class="account-balance" style="color: ${bal < 0 ? 'var(--danger-color)' : 'inherit'}">${balanceDisplay} ${balanceLabel}</div>
+                `;
+                }
                 container.appendChild(item);
             });
         }
     };
 
-    renderAccounts(accountListDesktopEl);
-    renderAccounts(accountListMobileEl);
+    renderAccounts(accountListDesktopEl, 'standard');
+    renderAccounts(investmentListDesktopEl, 'investment');
+    renderAccounts(accountListMobileEl, 'standard');
+    renderAccounts(investmentListMobileEl, 'investment');
 
     // Render EMIs list
     const renderEmis = (container: HTMLElement) => {
@@ -304,10 +360,11 @@ function updateUI() {
     renderEmis(emiListMobileEl);
 
     // Render transactions
-    if (txListEl) {
-        txListEl.innerHTML = '';
+    const renderTransactionsList = (container: HTMLElement) => {
+        if (!container) return;
+        container.innerHTML = '';
         if (state.transactions.length === 0) {
-            txListEl.innerHTML = '<div class="empty-state"><ion-icon name="receipt-outline"></ion-icon><p>No recent transactions.</p></div>';
+            container.innerHTML = '<div class="empty-state"><ion-icon name="receipt-outline"></ion-icon><p>No recent transactions.</p></div>';
         } else {
             // Show newest first
             [...state.transactions].reverse().forEach(t => {
@@ -337,11 +394,11 @@ function updateUI() {
             </div>
           </div>
         `;
-                txListEl.appendChild(item);
+                container.appendChild(item);
             });
 
             // Attach delete handlers for transactions
-            document.querySelectorAll('.delete-tx-btn').forEach(btn => {
+            container.querySelectorAll('.delete-tx-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const id = (e.currentTarget as HTMLButtonElement).dataset.id;
                     if (id) {
@@ -351,7 +408,10 @@ function updateUI() {
                 });
             });
         }
-    }
+    };
+
+    renderTransactionsList(txListEl);
+    renderTransactionsList(txListMobileSharedEl);
 }
 
 // --- Event Handlers ---
@@ -384,40 +444,120 @@ function setupTransactionForm(form: HTMLFormElement, typeInput: HTMLInputElement
 
 setupTransactionForm(txFormDesktop, txTypeInputDesktop, txAmountInputDesktop, txDescInputDesktop, txAccountSelectDesktop);
 setupTransactionForm(txFormMobile, txTypeInputMobile, txAmountInputMobile, txDescInputMobile, txAccountSelectMobile, () => {
-    if (txModal) txModal.classList.remove('open');
+    closeAllSheets();
 });
 
 // Accounts
-function setupAccountForm(btn: HTMLButtonElement, form: HTMLFormElement, cancelBtn: HTMLButtonElement, nameInput: HTMLInputElement, typeSelect: HTMLSelectElement, balanceInput: HTMLInputElement) {
+function setupAccountForm(
+    btn: HTMLButtonElement,
+    form: HTMLFormElement,
+    cancelBtn: HTMLButtonElement,
+    nameInput: HTMLInputElement,
+    typeSelect: HTMLSelectElement,
+    balanceInput: HTMLInputElement,
+    balanceGroup: HTMLElement,
+    limitGroup: HTMLElement,
+    limitInput: HTMLInputElement,
+    outstandingGroup: HTMLElement,
+    outstandingInput: HTMLInputElement
+) {
     if (!btn || !form) return;
-    btn.addEventListener('click', () => { form.style.display = 'block'; });
-    cancelBtn.addEventListener('click', () => { form.style.display = 'none'; form.reset(); });
+
+    const toggleFields = () => {
+        const isCredit = typeSelect.value === 'credit';
+        balanceGroup.style.display = isCredit ? 'none' : 'block';
+        limitGroup.style.display = isCredit ? 'block' : 'none';
+        outstandingGroup.style.display = isCredit ? 'block' : 'none';
+
+        const balanceLabel = balanceGroup.querySelector('label');
+        if (balanceLabel) {
+            balanceLabel.textContent = typeSelect.value === 'investment' ? 'Initial Value' : 'Initial Balance';
+        }
+    };
+
+    btn.addEventListener('click', () => {
+        if (form.id.includes('mobile')) {
+            openSheet(accountBottomSheet);
+        } else {
+            form.style.display = 'block';
+        }
+        toggleFields();
+    });
+
+    typeSelect.addEventListener('change', toggleFields);
+
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', () => {
+            form.style.display = 'none';
+            form.reset();
+        });
+    }
 
     form.addEventListener('submit', (e) => {
         e.preventDefault();
+        const type = typeSelect.value;
+        const isCredit = type === 'credit';
+
         const newAccount: Account = {
             id: crypto.randomUUID(),
             name: nameInput.value.trim(),
-            type: typeSelect.value,
-            // If user inputs a positive number for a credit card balance, typically it means they owe that much right now.
-            // E.g., Credit Card with 500 balance = -500 net cash.
-            balance: typeSelect.value === 'credit' ? -(parseFloat(balanceInput.value) || 0) : (parseFloat(balanceInput.value) || 0)
+            type: type,
+            balance: isCredit ? -(parseFloat(outstandingInput.value) || 0) : (parseFloat(balanceInput.value) || 0),
+            limit: isCredit ? (parseFloat(limitInput.value) || 0) : undefined
         };
         state.accounts.push(newAccount);
         saveState();
         form.reset();
-        form.style.display = 'none';
+        if (form.id.includes('mobile')) {
+            closeAllSheets();
+        } else {
+            form.style.display = 'none';
+        }
+        updateUI();
     });
 }
 
-setupAccountForm(addAccountBtnDesktop, addAccountFormDesktop, cancelAccountBtnDesktop, acctNameInputDesktop, acctTypeSelectDesktop, acctBalanceInputDesktop);
-setupAccountForm(addAccountBtnMobile, addAccountFormMobile, cancelAccountBtnMobile, acctNameInputMobile, acctTypeSelectMobile, acctBalanceInputMobile);
+setupAccountForm(
+    addAccountBtnDesktop,
+    addAccountFormDesktop,
+    cancelAccountBtnDesktop,
+    acctNameInputDesktop,
+    acctTypeSelectDesktop,
+    acctBalanceInputDesktop,
+    acctBalanceGroupDesktop,
+    acctLimitGroupDesktop,
+    acctLimitInputDesktop,
+    acctOutstandingGroupDesktop,
+    acctOutstandingInputDesktop
+);
+
+setupAccountForm(
+    addAccountBtnMobile,
+    addAccountFormMobile,
+    null as any, // Handled by closeAccountSheetBtn
+    acctNameInputMobile,
+    acctTypeSelectMobile,
+    acctBalanceInputMobile,
+    acctBalanceGroupMobile,
+    acctLimitGroupMobile,
+    acctLimitInputMobile,
+    acctOutstandingGroupMobile,
+    acctOutstandingInputMobile
+);
 
 // EMIs
-function setupEmiForm(btn: HTMLButtonElement, form: HTMLFormElement, cancelBtn: HTMLButtonElement, descInput: HTMLInputElement, amountInput: HTMLInputElement, accountSelect: HTMLSelectElement) {
+function setupEmiForm(btn: HTMLButtonElement, form: HTMLFormElement, cancelBtn: HTMLButtonElement | null, descInput: HTMLInputElement, amountInput: HTMLInputElement, accountSelect: HTMLSelectElement) {
     if (!btn || !form) return;
-    btn.addEventListener('click', () => { form.style.display = 'block'; });
-    cancelBtn.addEventListener('click', () => { form.style.display = 'none'; form.reset(); });
+    btn.addEventListener('click', () => {
+        if (form.id.includes('mobile')) {
+            openSheet(emiBottomSheet);
+        } else {
+            form.style.display = 'block';
+        }
+    });
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', () => { form.style.display = 'none'; form.reset(); });
+    }
 
     form.addEventListener('submit', (e) => {
         e.preventDefault();
@@ -434,12 +574,17 @@ function setupEmiForm(btn: HTMLButtonElement, form: HTMLFormElement, cancelBtn: 
         state.emis.push(newEmi);
         saveState();
         form.reset();
-        form.style.display = 'none';
+        if (form.id.includes('mobile')) {
+            closeAllSheets();
+        } else {
+            form.style.display = 'none';
+        }
+        updateUI();
     });
 }
 
 setupEmiForm(addEmiBtnDesktop, addEmiFormDesktop, cancelEmiBtnDesktop, emiDescInputDesktop, emiAmountInputDesktop, emiAccountSelectDesktop);
-setupEmiForm(addEmiBtnMobile, addEmiFormMobile, cancelEmiBtnMobile, emiDescInputMobile, emiAmountInputMobile, emiAccountSelectMobile);
+setupEmiForm(addEmiBtnMobile, addEmiFormMobile, null, emiDescInputMobile, emiAmountInputMobile, emiAccountSelectMobile);
 
 // Tabs Desktop & Mobile
 if (tabExpenseDesktop) tabExpenseDesktop.addEventListener('click', () => { tabExpenseDesktop.classList.add('active'); tabIncomeDesktop.classList.remove('active'); txTypeInputDesktop.value = 'expense'; });
@@ -447,18 +592,40 @@ if (tabIncomeDesktop) tabIncomeDesktop.addEventListener('click', () => { tabInco
 if (tabExpenseMobile) tabExpenseMobile.addEventListener('click', () => { tabExpenseMobile.classList.add('active'); tabIncomeMobile.classList.remove('active'); txTypeInputMobile.value = 'expense'; });
 if (tabIncomeMobile) tabIncomeMobile.addEventListener('click', () => { tabIncomeMobile.classList.add('active'); tabExpenseMobile.classList.remove('active'); txTypeInputMobile.value = 'income'; });
 
-// Mobile Navigation
-if (mobileAddBtn) mobileAddBtn.addEventListener('click', () => { txModal.classList.add('open'); });
-if (closeModalBtn) closeModalBtn.addEventListener('click', () => { txModal.classList.remove('open'); });
+// Helper to manage Bottom Sheets
+const openSheet = (sheet: HTMLElement) => {
+    globalOverlay.classList.add('open');
+    sheet.classList.add('open');
+};
 
+const closeAllSheets = () => {
+    globalOverlay.classList.remove('open');
+    txBottomSheet.classList.remove('open');
+    accountBottomSheet.classList.remove('open');
+    emiBottomSheet.classList.remove('open');
+};
+
+if (mobileAddBtn) mobileAddBtn.addEventListener('click', () => { openSheet(txBottomSheet); });
+if (closeTxSheetBtn) closeTxSheetBtn.addEventListener('click', closeAllSheets);
+if (closeAccountSheetBtn) closeAccountSheetBtn.addEventListener('click', closeAllSheets);
+if (closeEmiSheetBtn) closeEmiSheetBtn.addEventListener('click', closeAllSheets);
+if (globalOverlay) globalOverlay.addEventListener('click', closeAllSheets);
+
+// Mobile account/emi add buttons
+if (addAccountBtnMobile) addAccountBtnMobile.addEventListener('click', () => { openSheet(accountBottomSheet); });
+if (addEmiBtnMobile) addEmiBtnMobile.addEventListener('click', () => { openSheet(emiBottomSheet); });
+
+// Navigation logic (needs references re-fetched or kept)
 const resetMobileViews = () => {
     if (homeView) homeView.style.display = 'none';
-    if (transactionsContainer) transactionsContainer.style.display = 'none';
+    if (transactionsViewDesktop) transactionsViewDesktop.style.display = 'none';
     if (accountsMobileView) accountsMobileView.style.display = 'none';
+    if (transactionsMobileView) transactionsMobileView.style.display = 'none';
     if (emisMobileView) emisMobileView.style.display = 'none';
+
     if (navHome) navHome.classList.remove('active');
-    if (navTransactions) navTransactions.classList.remove('active');
     if (navAccounts) navAccounts.classList.remove('active');
+    if (navTransactions) navTransactions.classList.remove('active');
     if (navEmis) navEmis.classList.remove('active');
 };
 
@@ -468,15 +635,7 @@ if (navHome) {
         resetMobileViews();
         navHome.classList.add('active');
         homeView.style.display = 'grid';
-    });
-}
-
-if (navTransactions) {
-    navTransactions.addEventListener('click', (e) => {
-        e.preventDefault();
-        resetMobileViews();
-        navTransactions.classList.add('active');
-        transactionsContainer.style.display = 'block';
+        transactionsViewDesktop.style.display = 'block';
     });
 }
 
@@ -486,6 +645,15 @@ if (navAccounts) {
         resetMobileViews();
         navAccounts.classList.add('active');
         accountsMobileView.style.display = 'block';
+    });
+}
+
+if (navTransactions) {
+    navTransactions.addEventListener('click', (e) => {
+        e.preventDefault();
+        resetMobileViews();
+        navTransactions.classList.add('active');
+        transactionsMobileView.style.display = 'block';
     });
 }
 
@@ -543,3 +711,69 @@ if (importInput) {
 // --- Init ---
 loadState();
 updateUI();
+
+// Global Repayment Function
+(window as any).repayDebt = (accountId: string) => {
+    const account = state.accounts.find(a => a.id === accountId);
+    if (!account) return;
+
+    const currentOutstanding = Math.abs(getAccountBalance(accountId));
+    if (currentOutstanding <= 0) {
+        alert('No outstanding balance to repay!');
+        return;
+    }
+
+    const amountStr = prompt(`Repay Credit Card Debt\n\nCurrent Outstanding: ${formatCurrency(currentOutstanding)}\n\nEnter amount to repay:`, currentOutstanding.toString());
+    if (!amountStr) return;
+
+    const amount = parseFloat(amountStr);
+    if (isNaN(amount) || amount <= 0) {
+        alert('Invalid amount');
+        return;
+    }
+
+    const withdrawableAccounts = state.accounts.filter(a => a.type !== 'credit' && a.type !== 'investment');
+    if (withdrawableAccounts.length === 0) {
+        alert('No source account available to pay from!');
+        return;
+    }
+
+    let options = withdrawableAccounts.map((a, i) => `${i + 1}. ${a.name} (${formatCurrency(getAccountBalance(a.id))})`).join('\n');
+    const sourceIndexStr = prompt(`Select source account:\n\n${options}`, '1');
+    if (!sourceIndexStr) return;
+
+    const sourceIndex = parseInt(sourceIndexStr) - 1;
+    const sourceAccount = withdrawableAccounts[sourceIndex];
+
+    if (!sourceAccount) {
+        alert('Invalid selection');
+        return;
+    }
+
+    // Create two transactions: one expense from source, one income (repayment) to CC
+    const repaymentDesc = `Repayment for ${account.name}`;
+
+    // 1. Expense from source account
+    state.transactions.push({
+        id: crypto.randomUUID(),
+        amount: amount,
+        description: repaymentDesc,
+        type: 'expense',
+        accountId: sourceAccount.id,
+        date: new Date().toISOString()
+    });
+
+    // 2. Income (Debt Reduction) to Credit Card
+    state.transactions.push({
+        id: crypto.randomUUID(),
+        amount: amount,
+        description: repaymentDesc,
+        type: 'income',
+        accountId: account.id,
+        date: new Date().toISOString()
+    });
+
+    saveState();
+    alert('Repayment successful!');
+    updateUI();
+};

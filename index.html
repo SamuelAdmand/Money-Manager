@@ -135,6 +135,13 @@
                         <!-- Populated by JS -->
                     </div>
 
+                    <div class="section-header" style="margin-top: 1.5rem;">
+                        <h2>Investments</h2>
+                    </div>
+                    <div class="account-list" id="investment-list-desktop">
+                        <!-- Populated by JS -->
+                    </div>
+
                     <form id="add-account-form-desktop"
                         style="display: none; margin-top: 1rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
                         <div class="form-group">
@@ -151,9 +158,19 @@
                                 <option value="investment">Investment</option>
                             </select>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group" id="acct-balance-group-desktop">
                             <label for="acct-balance-desktop">Initial Balance</label>
                             <input type="number" class="form-control" id="acct-balance-desktop" placeholder="0.00"
+                                step="0.01" value="0.00">
+                        </div>
+                        <div class="form-group" id="acct-limit-group-desktop" style="display: none;">
+                            <label for="acct-limit-desktop">Total Limit</label>
+                            <input type="number" class="form-control" id="acct-limit-desktop" placeholder="0.00"
+                                step="0.01" value="0.00">
+                        </div>
+                        <div class="form-group" id="acct-outstanding-group-desktop" style="display: none;">
+                            <label for="acct-outstanding-desktop">Current Outstanding</label>
+                            <input type="number" class="form-control" id="acct-outstanding-desktop" placeholder="0.00"
                                 step="0.01" value="0.00">
                         </div>
                         <div style="display: flex; gap: 0.5rem;">
@@ -229,34 +246,23 @@
                         <!-- Populated by JS -->
                     </div>
 
-                    <form id="add-account-form-mobile"
-                        style="display: none; margin-top: 1rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
-                        <div class="form-group">
-                            <label for="acct-name-mobile">Account Name</label>
-                            <input type="text" class="form-control" id="acct-name-mobile" placeholder="Bank, Cash, etc."
-                                required>
-                        </div>
-                        <div class="form-group">
-                            <label for="acct-type-mobile">Type</label>
-                            <select class="form-control" id="acct-type-mobile">
-                                <option value="bank">Bank</option>
-                                <option value="cash">Cash</option>
-                                <option value="credit">Credit Card</option>
-                                <option value="investment">Investment</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="acct-balance-mobile">Initial Balance</label>
-                            <input type="number" class="form-control" id="acct-balance-mobile" placeholder="0.00"
-                                step="0.01" value="0.00">
-                        </div>
-                        <div style="display: flex; gap: 0.5rem;">
-                            <button type="submit" class="btn-primary"
-                                style="flex: 1; justify-content: center; padding: 0.5rem;">Save</button>
-                            <button type="button" class="btn-icon" id="cancel-account-btn-mobile"
-                                style="border-radius: var(--radius-md);"><ion-icon name="close"></ion-icon></button>
-                        </div>
-                    </form>
+                    <div class="section-header" style="margin-top: 1.5rem;">
+                        <h2>Investments</h2>
+                    </div>
+                    <div class="account-list" id="investment-list-mobile">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="main-content mobile-only" id="transactions-mobile-view" style="display: none;">
+                <div class="glass" style="padding: 1.5rem; min-height: 400px; padding-bottom: 6rem;">
+                    <div class="section-header">
+                        <h2>Recent Transactions</h2>
+                    </div>
+                    <div class="transaction-list" id="transaction-list-mobile">
+                        <!-- Populated by JS -->
+                    </div>
                 </div>
             </div>
 
@@ -272,32 +278,6 @@
                     <div class="account-list" id="emi-list-mobile">
                         <!-- Populated by JS -->
                     </div>
-
-                    <form id="add-emi-form-mobile"
-                        style="display: none; margin-top: 1rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
-                        <div class="form-group">
-                            <label for="emi-desc-mobile">Description</label>
-                            <input type="text" class="form-control" id="emi-desc-mobile"
-                                placeholder="Car Loan, Rent, etc." required>
-                        </div>
-                        <div class="form-group">
-                            <label for="emi-amount-mobile">Monthly Amount</label>
-                            <input type="number" class="form-control" id="emi-amount-mobile" placeholder="0.00"
-                                step="0.01" required min="0.01">
-                        </div>
-                        <div class="form-group">
-                            <label for="emi-account-mobile">Linked Account</label>
-                            <select class="form-control" id="emi-account-mobile" required>
-                                <!-- Populated by JS -->
-                            </select>
-                        </div>
-                        <div style="display: flex; gap: 0.5rem;">
-                            <button type="submit" class="btn-primary"
-                                style="flex: 1; justify-content: center; padding: 0.5rem;">Save EMI</button>
-                            <button type="button" class="btn-icon" id="cancel-emi-btn-mobile"
-                                style="border-radius: var(--radius-md);"><ion-icon name="close"></ion-icon></button>
-                        </div>
-                    </form>
                 </div>
             </div>
 
@@ -322,51 +302,138 @@
             </button>
         </div>
 
+        <a href="#" class="nav-item" id="nav-transactions">
+            <ion-icon name="receipt-outline"></ion-icon>
+            <span>TXs</span>
+        </a>
+
         <a href="#" class="nav-item" id="nav-emis">
             <ion-icon name="calendar-outline"></ion-icon>
             <span>EMIs</span>
         </a>
     </nav>
 
-    <!-- Mobile Add Transaction Modal -->
-    <div class="modal-overlay" id="tx-modal">
-        <div class="modal-content glass">
-            <div class="modal-header">
-                <h2>Add Transaction</h2>
-                <button class="btn-icon" id="close-modal-btn">
-                    <ion-icon name="close"></ion-icon>
-                </button>
-            </div>
+    <!-- Bottom Sheet Forms Overlay -->
+    <div class="bottom-sheet-overlay" id="global-overlay"></div>
 
-            <div class="tabs">
-                <button class="tab active" id="tab-expense-mobile" data-type="expense">Expense</button>
-                <button class="tab" id="tab-income-mobile" data-type="income">Income</button>
-            </div>
-
-            <form id="transaction-form-mobile">
-                <input type="hidden" id="tx-type-mobile" value="expense">
-                <div class="form-group">
-                    <label for="tx-amount-mobile">Amount</label>
-                    <input type="number" class="form-control" id="tx-amount-mobile" placeholder="0.00" step="0.01"
-                        required min="0.01">
-                </div>
-                <div class="form-group">
-                    <label for="tx-desc-mobile">Description</label>
-                    <input type="text" class="form-control" id="tx-desc-mobile" placeholder="Groceries, Salary, etc."
-                        required>
-                </div>
-                <div class="form-group">
-                    <label for="tx-account-mobile">Account</label>
-                    <select class="form-control" id="tx-account-mobile" required>
-                        <!-- Populated by JS -->
-                    </select>
-                </div>
-                <button type="submit" class="btn-primary" style="width: 100%; justify-content: center;">
-                    <ion-icon name="add-circle-outline"></ion-icon>
-                    Save Transaction
-                </button>
-            </form>
+    <!-- Transaction Bottom Sheet -->
+    <div class="bottom-sheet" id="tx-bottom-sheet">
+        <div class="bottom-sheet-drag-handle"></div>
+        <div class="bottom-sheet-header">
+            <h2>Add Transaction</h2>
+            <button class="btn-icon" id="close-tx-sheet">
+                <ion-icon name="close"></ion-icon>
+            </button>
         </div>
+
+        <div class="tabs">
+            <button class="tab active" id="tab-expense-mobile" data-type="expense">Expense</button>
+            <button class="tab" id="tab-income-mobile" data-type="income">Income</button>
+        </div>
+
+        <form id="transaction-form-mobile">
+            <input type="hidden" id="tx-type-mobile" value="expense">
+            <div class="form-group">
+                <label for="tx-amount-mobile">Amount</label>
+                <input type="number" class="form-control" id="tx-amount-mobile" placeholder="0.00" step="0.01" required
+                    min="0.01">
+            </div>
+            <div class="form-group">
+                <label for="tx-desc-mobile">Description</label>
+                <input type="text" class="form-control" id="tx-desc-mobile" placeholder="Groceries, Salary, etc."
+                    required>
+            </div>
+            <div class="form-group">
+                <label for="tx-account-mobile">Account</label>
+                <select class="form-control" id="tx-account-mobile" required>
+                    <!-- Populated by JS -->
+                </select>
+            </div>
+            <button type="submit" class="btn-primary" style="width: 100%; justify-content: center;">
+                <ion-icon name="add-circle-outline"></ion-icon>
+                Save Transaction
+            </button>
+        </form>
+    </div>
+
+    <!-- Account Bottom Sheet -->
+    <div class="bottom-sheet" id="account-bottom-sheet">
+        <div class="bottom-sheet-drag-handle"></div>
+        <div class="bottom-sheet-header">
+            <h2>Add Account</h2>
+            <button class="btn-icon" id="close-account-sheet">
+                <ion-icon name="close"></ion-icon>
+            </button>
+        </div>
+
+        <form id="add-account-form-mobile">
+            <div class="form-group">
+                <label for="acct-name-mobile">Account Name</label>
+                <input type="text" class="form-control" id="acct-name-mobile" placeholder="Bank, Cash, etc." required>
+            </div>
+            <div class="form-group">
+                <label for="acct-type-mobile">Type</label>
+                <select class="form-control" id="acct-type-mobile">
+                    <option value="bank">Bank</option>
+                    <option value="cash">Cash</option>
+                    <option value="credit">Credit Card</option>
+                    <option value="investment">Investment</option>
+                </select>
+            </div>
+            <div class="form-group" id="acct-balance-group-mobile">
+                <label for="acct-balance-mobile">Initial Balance</label>
+                <input type="number" class="form-control" id="acct-balance-mobile" placeholder="0.00" step="0.01"
+                    value="0.00">
+            </div>
+            <div class="form-group" id="acct-limit-group-mobile" style="display: none;">
+                <label for="acct-limit-mobile">Total Limit</label>
+                <input type="number" class="form-control" id="acct-limit-mobile" placeholder="0.00" step="0.01"
+                    value="0.00">
+            </div>
+            <div class="form-group" id="acct-outstanding-group-mobile" style="display: none;">
+                <label for="acct-outstanding-mobile">Current Outstanding</label>
+                <input type="number" class="form-control" id="acct-outstanding-mobile" placeholder="0.00" step="0.01"
+                    value="0.00">
+            </div>
+            <button type="submit" class="btn-primary" style="width: 100%; justify-content: center;">
+                <ion-icon name="save-outline"></ion-icon>
+                Save Account
+            </button>
+        </form>
+    </div>
+
+    <!-- EMI Bottom Sheet -->
+    <div class="bottom-sheet" id="emi-bottom-sheet">
+        <div class="bottom-sheet-drag-handle"></div>
+        <div class="bottom-sheet-header">
+            <h2>Add EMI</h2>
+            <button class="btn-icon" id="close-emi-sheet">
+                <ion-icon name="close"></ion-icon>
+            </button>
+        </div>
+
+        <form id="add-emi-form-mobile">
+            <div class="form-group">
+                <label for="emi-desc-mobile">Description</label>
+                <input type="text" class="form-control" id="emi-desc-mobile" placeholder="Car Loan, Rent, etc."
+                    required>
+            </div>
+            <div class="form-group">
+                <label for="emi-amount-mobile">Monthly Amount</label>
+                <input type="number" class="form-control" id="emi-amount-mobile" placeholder="0.00" step="0.01" required
+                    min="0.01">
+            </div>
+            <div class="form-group">
+                <label for="emi-account-mobile">Linked Account</label>
+                <select class="form-control" id="emi-account-mobile" required>
+                    <!-- Populated by JS -->
+                </select>
+            </div>
+            <button type="submit" class="btn-primary" style="width: 100%; justify-content: center;">
+                <ion-icon name="calendar-outline"></ion-icon>
+                Save EMI
+            </button>
+        </form>
     </div>
 
     <script type="module" src="/src/main.ts"></script>
