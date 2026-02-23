@@ -32,17 +32,9 @@
                 <h1>MoneyManager</h1>
             </div>
             <div class="header-actions">
-                <button class="btn-icon" id="theme-toggle" aria-label="Toggle Theme">
-                    <ion-icon name="moon"></ion-icon>
+                <button class="btn-icon" id="open-settings" aria-label="Open Settings">
+                    <ion-icon name="settings-outline"></ion-icon>
                 </button>
-                <button class="btn-icon" id="export-data" aria-label="Export Data" title="Export Data">
-                    <ion-icon name="download-outline"></ion-icon>
-                </button>
-                <label class="btn-icon" for="import-data" aria-label="Import Data" title="Import Data"
-                    style="cursor: pointer; display: flex;">
-                    <ion-icon name="cloud-upload-outline"></ion-icon>
-                    <input type="file" id="import-data" accept=".json" style="display: none;" />
-                </label>
             </div>
         </header>
 
@@ -121,9 +113,14 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label for="tx-desc-desktop">Description</label>
+                            <label for="tx-category-desktop">Category</label>
+                            <input type="text" class="form-control" id="tx-category-desktop"
+                                placeholder="Food, Rent, Salary, etc." required>
+                        </div>
+                        <div class="form-group">
+                            <label for="tx-desc-desktop">Description (Optional)</label>
                             <input type="text" class="form-control" id="tx-desc-desktop"
-                                placeholder="Groceries, Salary, etc." required>
+                                placeholder="Specific details..." required>
                         </div>
                         <div class="form-group">
                             <label for="tx-account-desktop">Account</label>
@@ -296,7 +293,6 @@
                     </div>
                 </div>
             </div>
-
         </div>
     </div>
 
@@ -361,9 +357,13 @@
                 </div>
             </div>
             <div class="form-group">
-                <label for="tx-desc-mobile">Description</label>
-                <input type="text" class="form-control" id="tx-desc-mobile" placeholder="Groceries, Salary, etc."
+                <label for="tx-category-mobile">Category</label>
+                <input type="text" class="form-control" id="tx-category-mobile" placeholder="Food, Rent, Salary, etc."
                     required>
+            </div>
+            <div class="form-group">
+                <label for="tx-desc-mobile">Description (Optional)</label>
+                <input type="text" class="form-control" id="tx-desc-mobile" placeholder="Specific details..." required>
             </div>
             <div class="form-group">
                 <label for="tx-account-mobile">Account</label>
@@ -456,6 +456,74 @@
                 Save EMI
             </button>
         </form>
+    </div>
+
+    <!-- Settings Bottom Sheet -->
+    <div class="bottom-sheet" id="settings-bottom-sheet">
+        <div class="bottom-sheet-drag-handle"></div>
+        <div class="bottom-sheet-header">
+            <h2>Settings</h2>
+            <button class="btn-icon" id="close-settings-sheet">
+                <ion-icon name="close"></ion-icon>
+            </button>
+        </div>
+
+        <div class="settings-list" style="padding: 0 1.5rem 1.5rem;">
+            <div class="settings-item">
+                <div class="settings-item-info">
+                    <ion-icon name="moon-outline" id="settings-theme-icon"></ion-icon>
+                    <div>
+                        <h4>Appearance</h4>
+                        <p id="theme-status">Switch to Light Mode</p>
+                    </div>
+                </div>
+                <button class="btn-icon" id="theme-toggle-settings">
+                    <ion-icon name="swap-horizontal-outline"></ion-icon>
+                </button>
+            </div>
+
+            <div class="settings-item">
+                <div class="settings-item-info">
+                    <ion-icon name="download-outline"></ion-icon>
+                    <div>
+                        <h4>Backup Data</h4>
+                        <p>Save your transactions to a file</p>
+                    </div>
+                </div>
+                <button class="btn-icon" id="export-data-settings">
+                    <ion-icon name="chevron-forward-outline"></ion-icon>
+                </button>
+            </div>
+
+            <div class="settings-item">
+                <div class="settings-item-info">
+                    <ion-icon name="cloud-upload-outline"></ion-icon>
+                    <div>
+                        <h4>Restore Data</h4>
+                        <p>Upload a previously saved backup</p>
+                    </div>
+                </div>
+                <label class="btn-icon" for="import-data-settings" style="cursor: pointer; display: flex;">
+                    <ion-icon name="chevron-forward-outline"></ion-icon>
+                    <input type="file" id="import-data-settings" accept=".json" style="display: none;" />
+                </label>
+            </div>
+            <div class="settings-item-header"
+                style="margin-top: 1rem; margin-bottom: 0.5rem; font-weight: 600; opacity: 0.7; font-size: 0.8rem; text-transform: uppercase;">
+                Custom Categories</div>
+            <div id="custom-presets-list">
+                <!-- Populated by JS -->
+            </div>
+            <button class="settings-item" id="add-custom-preset-btn"
+                style="border: 1px dashed var(--border-color); justify-content: center; margin-top: 0.5rem; background: transparent;">
+                <ion-icon name="add-outline"></ion-icon>
+                <span>Add Category</span>
+            </button>
+        </div>
+        <button class="btn-primary" id="close-settings-sheet-btn"
+            style="width: 100%; justify-content: center; margin-top: 1rem; margin-bottom: 1.5rem; margin-left: auto; margin-right: auto; max-width: calc(100% - 3rem); display: flex;">
+            Done
+        </button>
     </div>
 
     <script type="module" src="/src/main.ts"></script>

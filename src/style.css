@@ -61,6 +61,10 @@ body {
     overscroll-behavior-y: none;
 }
 
+body.no-scroll {
+    overflow: hidden;
+}
+
 /* Glassmorphism utility */
 .glass {
     background: var(--surface-bg);
@@ -637,6 +641,73 @@ button {
     }
 }
 
+
+
+.settings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.settings-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    background: var(--surface-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    transition: all var(--transition-fast);
+}
+
+.settings-item-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.settings-item-info ion-icon {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+}
+
+.settings-item-info h4 {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.settings-item-info p {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.settings-item-header {
+    letter-spacing: 0.05em;
+    color: var(--primary-color);
+}
+
+.delete-preset-btn {
+    opacity: 0.6;
+    transition: opacity var(--transition-fast);
+}
+
+.delete-preset-btn:hover {
+    opacity: 1;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 /* ==========================================================================
    Mobile Bottom Navigation & FAB Native App Feel
    ========================================================================== */
@@ -832,14 +903,18 @@ button {
     /* Hidden by default */
     left: 0;
     width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
     background: var(--surface-bg);
     border-top-left-radius: 24px;
     border-top-right-radius: 24px;
     padding: 1.5rem;
-    padding-bottom: env(safe-area-inset-bottom, 2rem);
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 2.5rem);
     z-index: 2001;
     transition: bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.1);
+    /* Improve scroll feel for iOS */
+    -webkit-overflow-scrolling: touch;
 }
 
 .bottom-sheet.open {
