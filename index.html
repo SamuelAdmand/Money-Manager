@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Money Manager - Premium Budget Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Ionicons for beautiful lightweight icons -->
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <header>
+            <div class="header-brand">
+                <ion-icon name="wallet"></ion-icon>
+                <h1>MoneyManager</h1>
+            </div>
+            <div class="header-actions">
+                <button class="btn-icon" id="theme-toggle" aria-label="Toggle Theme">
+                    <ion-icon name="moon"></ion-icon>
+                </button>
+                <button class="btn-icon" id="export-data" aria-label="Export Data" title="Export Data">
+                    <ion-icon name="download-outline"></ion-icon>
+                </button>
+                <label class="btn-icon" for="import-data" aria-label="Import Data" title="Import Data"
+                    style="cursor: pointer; display: flex;">
+                    <ion-icon name="cloud-upload-outline"></ion-icon>
+                    <input type="file" id="import-data" accept=".json" style="display: none;" />
+                </label>
+            </div>
+        </header>
+
+        <div class="dashboard-grid">
+            <div class="glass summary-card">
+                <div class="summary-header">
+                    <span>Total Balance</span>
+                    <div class="summary-icon icon-balance">
+                        <ion-icon name="cash-outline"></ion-icon>
+                    </div>
+                </div>
+                <div class="summary-amount" id="total-balance">₹0.00</div>
+            </div>
+            <div class="glass summary-card">
+                <div class="summary-header">
+                    <span>Income</span>
+                    <div class="summary-icon icon-income">
+                        <ion-icon name="arrow-down-circle-outline"></ion-icon>
+                    </div>
+                </div>
+                <div class="summary-amount tx-income" id="total-income">₹0.00</div>
+            </div>
+            <div class="glass summary-card">
+                <div class="summary-header">
+                    <span>Expenses</span>
+                    <div class="summary-icon icon-expense">
+                        <ion-icon name="arrow-up-circle-outline"></ion-icon>
+                    </div>
+                </div>
+                <div class="summary-amount tx-expense" id="total-expense">₹0.00</div>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <div class="sidebar">
+                <div class="glass" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+                    <div class="section-header">
+                        <h2>Add Transaction</h2>
+                    </div>
+
+                    <div class="tabs">
+                        <button class="tab active" id="tab-expense" data-type="expense">Expense</button>
+                        <button class="tab" id="tab-income" data-type="income">Income</button>
+                    </div>
+
+                    <form id="transaction-form">
+                        <input type="hidden" id="tx-type" value="expense">
+                        <div class="form-group">
+                            <label for="tx-amount">Amount</label>
+                            <input type="number" class="form-control" id="tx-amount" placeholder="0.00" step="0.01"
+                                required min="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label for="tx-desc">Description</label>
+                            <input type="text" class="form-control" id="tx-desc" placeholder="Groceries, Salary, etc."
+                                required>
+                        </div>
+                        <div class="form-group">
+                            <label for="tx-account">Account</label>
+                            <select class="form-control" id="tx-account" required>
+                                <!-- Populated by JS -->
+                            </select>
+                        </div>
+                        <button type="submit" class="btn-primary" style="width: 100%; justify-content: center;">
+                            <ion-icon name="add-circle-outline"></ion-icon>
+                            Add Transaction
+                        </button>
+                    </form>
+                </div>
+
+                <div class="glass" style="padding: 1.5rem;">
+                    <div class="section-header">
+                        <h2>My Accounts</h2>
+                        <button class="btn-icon" id="add-account-btn" aria-label="Add Account"
+                            style="width: 2rem; height: 2rem;">
+                            <ion-icon name="add"></ion-icon>
+                        </button>
+                    </div>
+                    <div class="account-list" id="account-list">
+                        <!-- Populated by JS -->
+                    </div>
+
+                    <form id="add-account-form"
+                        style="display: none; margin-top: 1rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                        <div class="form-group">
+                            <label for="acct-name">Account Name</label>
+                            <input type="text" class="form-control" id="acct-name" placeholder="Bank, Cash, etc."
+                                required>
+                        </div>
+                        <div class="form-group">
+                            <label for="acct-type">Type</label>
+                            <select class="form-control" id="acct-type">
+                                <option value="bank">Bank</option>
+                                <option value="cash">Cash</option>
+                                <option value="credit">Credit Card</option>
+                                <option value="investment">Investment</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="acct-balance">Initial Balance</label>
+                            <input type="number" class="form-control" id="acct-balance" placeholder="0.00" step="0.01"
+                                value="0.00">
+                        </div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button type="submit" class="btn-primary"
+                                style="flex: 1; justify-content: center; padding: 0.5rem;">Save</button>
+                            <button type="button" class="btn-icon" id="cancel-account-btn"
+                                style="border-radius: var(--radius-md);"><ion-icon name="close"></ion-icon></button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="main-content">
+                <div class="glass" style="padding: 1.5rem; min-height: 400px;">
+                    <div class="section-header">
+                        <h2>Recent Transactions</h2>
+                    </div>
+                    <div class="transaction-list" id="transaction-list">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+</body>
+
+</html>
