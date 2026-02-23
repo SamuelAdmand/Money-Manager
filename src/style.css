@@ -593,6 +593,50 @@ button {
     opacity: 0.5;
 }
 
+/* Presets */
+.description-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.preset-chip {
+    padding: 0.35rem 0.75rem;
+    border-radius: var(--radius-full);
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.preset-chip:hover {
+    background: var(--border-color);
+    color: var(--text-primary);
+}
+
+.preset-chip.active {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.preset-chip ion-icon {
+    font-size: 0.9rem;
+}
+
+@media (max-width: 480px) {
+    .preset-chip {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.7rem;
+    }
+}
+
 /* ==========================================================================
    Mobile Bottom Navigation & FAB Native App Feel
    ========================================================================== */

@@ -130,6 +130,8 @@ const txTypeInputMobile = document.getElementById('tx-type-mobile') as HTMLInput
 const txAmountInputMobile = document.getElementById('tx-amount-mobile') as HTMLInputElement;
 const txDescInputMobile = document.getElementById('tx-desc-mobile') as HTMLInputElement;
 const txAccountSelectMobile = document.getElementById('tx-account-mobile') as HTMLSelectElement;
+const txPresetsDesktop = document.getElementById('tx-presets-desktop')!;
+const txPresetsMobile = document.getElementById('tx-presets-mobile')!;
 
 // Mobile Accounts
 const accountListMobileEl = document.getElementById('account-list-mobile')!;
@@ -283,10 +285,6 @@ function updateUI() {
                             <h5>${a.name}</h5>
                             <p>${a.type.toUpperCase()}</p>
                         </div>
-                        <button class="repay-btn" onclick="window.repayDebt('${a.id}')">
-                            <ion-icon name="arrow-undo-outline"></ion-icon>
-                            Repay
-                        </button>
                     </div>
                     <div class="card-chip"></div>
                     <div class="card-body">
@@ -317,6 +315,44 @@ function updateUI() {
     renderAccounts(investmentListDesktopEl, 'investment');
     renderAccounts(accountListMobileEl, 'standard');
     renderAccounts(investmentListMobileEl, 'investment');
+
+    // --- Transaction Presets Management ---
+    const PRESETS = [
+        { name: 'Grocery', icon: 'cart-outline' },
+        { name: 'Health', icon: 'heart-outline' },
+        { name: 'Dining', icon: 'restaurant-outline' },
+        { name: 'Travel', icon: 'airplane-outline' },
+        { name: 'Repay', icon: 'arrow-undo-outline' },
+        { name: 'Salary', icon: 'cash-outline' }
+    ];
+
+    const setupPresets = (container: HTMLElement, input: HTMLInputElement, accountSelect: HTMLSelectElement) => {
+        if (!container) return;
+        container.innerHTML = '';
+        PRESETS.forEach(p => {
+            const chip = document.createElement('button');
+            chip.type = 'button';
+            chip.className = 'preset-chip';
+            chip.innerHTML = `<ion-icon name="${p.icon}"></ion-icon> ${p.name}`;
+            chip.addEventListener('click', () => {
+                if (p.name === 'Repay') {
+                    const selAccount = state.accounts.find(a => a.id === accountSelect.value);
+                    if (selAccount && selAccount.type === 'credit') {
+                        (window as any).repayDebt(selAccount.id);
+                        return;
+                    } else {
+                        alert('Please select a Credit Card account first to use the Repay shortcut.');
+                        return;
+                    }
+                }
+                input.value = p.name;
+            });
+            container.appendChild(chip);
+        });
+    };
+
+    setupPresets(txPresetsDesktop, txDescInputDesktop, txAccountSelectDesktop);
+    setupPresets(txPresetsMobile, txDescInputMobile, txAccountSelectMobile);
 
     // Render EMIs list
     const renderEmis = (container: HTMLElement) => {
