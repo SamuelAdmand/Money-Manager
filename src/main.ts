@@ -4,8 +4,33 @@ import './style.css';
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
-            .then(reg => console.log('SW Registered!', reg))
+            .then(reg => {
+                console.log('SW Registered!', reg);
+
+                // Check for updates periodically
+                reg.onupdatefound = () => {
+                    const installingWorker = reg.installing;
+                    if (installingWorker) {
+                        installingWorker.onstatechange = () => {
+                            if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                // New version available, UI could show a notification,
+                                // but as per user request for "auto refresh", we'll force it.
+                                console.log('New content available; please refresh.');
+                            }
+                        };
+                    }
+                };
+            })
             .catch(err => console.log('SW registration failed: ', err));
+    });
+
+    // Handle the actual reload when the new service worker takes over
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) {
+            refreshing = true;
+            window.location.reload();
+        }
     });
 }
 
