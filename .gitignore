@@ -1,0 +1,15 @@
+# Build and environment
+node_modules/
+dist/
+.env
+.env.*
+.DS_Store
+
+# IDEs
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
