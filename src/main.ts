@@ -136,6 +136,7 @@ const emiAccountSelectMobile = document.getElementById('emi-account-mobile') as 
 
 // Mobile Nav Bar Switching
 const navHome = document.getElementById('nav-home')!;
+const navTransactions = document.getElementById('nav-transactions')!;
 const navAccounts = document.getElementById('nav-accounts')!;
 const navEmis = document.getElementById('nav-emis')!;
 const homeView = document.getElementById('home-view')!;
@@ -225,8 +226,9 @@ function updateUI() {
     }
 
     const renderAccountOptions = () => {
-        if (state.accounts.length === 0) return '<option value="" disabled selected>No accounts found</option>';
-        return state.accounts.map(a => `<option value="${a.id}">${a.name} (${a.type})</option>`).join('');
+        const eligibleAccounts = state.accounts.filter(a => a.type !== 'investment');
+        if (eligibleAccounts.length === 0) return '<option value="" disabled selected>No accounts found</option>';
+        return eligibleAccounts.map(a => `<option value="${a.id}">${a.name} (${a.type})</option>`).join('');
     };
 
     if (txAccountSelectDesktop) txAccountSelectDesktop.innerHTML = renderAccountOptions();
@@ -455,6 +457,7 @@ const resetMobileViews = () => {
     if (accountsMobileView) accountsMobileView.style.display = 'none';
     if (emisMobileView) emisMobileView.style.display = 'none';
     if (navHome) navHome.classList.remove('active');
+    if (navTransactions) navTransactions.classList.remove('active');
     if (navAccounts) navAccounts.classList.remove('active');
     if (navEmis) navEmis.classList.remove('active');
 };
@@ -465,6 +468,14 @@ if (navHome) {
         resetMobileViews();
         navHome.classList.add('active');
         homeView.style.display = 'grid';
+    });
+}
+
+if (navTransactions) {
+    navTransactions.addEventListener('click', (e) => {
+        e.preventDefault();
+        resetMobileViews();
+        navTransactions.classList.add('active');
         transactionsContainer.style.display = 'block';
     });
 }
