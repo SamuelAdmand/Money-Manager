@@ -125,10 +125,13 @@ function saveState() {
 }
 
 // --- DOM Elements ---
-// Settings
-const settingsBottomSheet = document.getElementById('settings-bottom-sheet')!;
+// Navigation Views
+const dashboardView = document.getElementById('dashboard-view')!;
+const settingsView = document.getElementById('settings-view')!;
+
+// Settings View Elements
 const openSettingsBtn = document.getElementById('open-settings') as HTMLButtonElement;
-const closeSettingsSheetBtn = document.getElementById('close-settings-sheet') as HTMLButtonElement;
+const backFromSettingsBtn = document.getElementById('back-from-settings') as HTMLButtonElement;
 const themeToggleSettings = document.getElementById('theme-toggle-settings') as HTMLButtonElement;
 const themeStatusEl = document.getElementById('theme-status')!;
 const exportBtnSettings = document.getElementById('export-data-settings') as HTMLButtonElement;
@@ -822,7 +825,6 @@ const closeAllSheets = () => {
     if (txBottomSheet) txBottomSheet.classList.remove('open');
     if (accountBottomSheet) accountBottomSheet.classList.remove('open');
     if (emiBottomSheet) emiBottomSheet.classList.remove('open');
-    if (settingsBottomSheet) settingsBottomSheet.classList.remove('open');
     unlockScroll();
 };
 
@@ -830,9 +832,13 @@ if (mobileAddBtn) mobileAddBtn.addEventListener('click', () => { openSheet(txBot
 if (closeTxSheetBtn) closeTxSheetBtn.addEventListener('click', closeAllSheets);
 if (closeAccountSheetBtn) closeAccountSheetBtn.addEventListener('click', closeAllSheets);
 if (closeEmiSheetBtn) closeEmiSheetBtn.addEventListener('click', closeAllSheets);
-if (closeSettingsSheetBtn) closeSettingsSheetBtn.addEventListener('click', closeAllSheets);
-const doneSettingsBtn = document.getElementById('close-settings-sheet-btn');
-if (doneSettingsBtn) doneSettingsBtn.addEventListener('click', closeAllSheets);
+if (backFromSettingsBtn) {
+    backFromSettingsBtn.addEventListener('click', () => {
+        settingsView.style.display = 'none';
+        dashboardView.style.display = 'block';
+        unlockScroll();
+    });
+}
 if (globalOverlay) globalOverlay.addEventListener('click', closeAllSheets);
 
 if (addAccountBtnMobile) addAccountBtnMobile.addEventListener('click', () => { openSheet(accountBottomSheet); });
@@ -854,7 +860,9 @@ const resetMobileViews = () => {
 
 if (openSettingsBtn) {
     openSettingsBtn.addEventListener('click', () => {
-        openSheet(settingsBottomSheet);
+        dashboardView.style.display = 'none';
+        settingsView.style.display = 'flex';
+        lockScroll();
         updateSettingsUI();
     });
 }
